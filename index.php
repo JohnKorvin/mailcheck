@@ -8,9 +8,9 @@ if( $_GET['type'] == "subscriber" && isset($_GET['val']) ) {
 	header('Cache-Control: no-cache');
 	
 	$result = array();
-	$val = explode(" ", addslashes(strip_tags($_GET['val'])) );
+	$val = explode(" ", addslashes(strip_tags(trim($_GET['val']))) );
 	
-	$r = my_query("SELECT `id`, `fio` FROM `subscriber` WHERE `fio` LIKE '%".implode("%' && `fio` LIKE '%",$val)."%' LIMIT 100");
+	$r = my_query("SELECT `id`, `fio` FROM `subscriber` WHERE `fio` LIKE '%".implode("%' && `fio` LIKE '%",$val)."%' GROUP BY `id` LIMIT 100");
 	if( $r && ($result["size"] = mysql_num_rows($r)) > 0 ) {
 		while( $o = mysql_fetch_assoc($r) ) {
 			$result["items"][$o["id"]] = $o["fio"];
@@ -25,9 +25,9 @@ if( $_GET['type'] == "subscriber" && isset($_GET['val']) ) {
 	header('Cache-Control: no-cache');
 	
 	$result = array();
-	$val = explode(" ", addslashes(strip_tags($_GET['val'])) );
+	$val = explode(" ", addslashes(strip_tags(trim($_GET['val']))) );
 	
-	$r = my_query("SELECT `id`, `name`, `number` FROM `magazine` WHERE `name` LIKE '%".implode("%' && `name` LIKE '%",$val)."%' LIMIT 100");
+	$r = my_query("SELECT `id`, `name`, `number` FROM `magazine` WHERE `name` LIKE '%".implode("%' && `name` LIKE '%",$val)."%' GROUP BY `id` LIMIT 100");
 	if( $r && ($result["size"] = mysql_num_rows($r)) > 0 ) {
 		while( $o = mysql_fetch_assoc($r) ) {
 			$result["items"][$o["id"]] = $o["name"]." #".$o["number"];
@@ -37,36 +37,46 @@ if( $_GET['type'] == "subscriber" && isset($_GET['val']) ) {
 	echo htmlspecialchars(json_encode($result), ENT_NOQUOTES);
 	exit;
 	
-} else if( isset($_GET["add-check"]) ) {
+} else if( isset($_POST["update-check"]) && ($id=(int)$_GET['id']) ) {
+	
+	header('Content-Type: application/json; charset=UTF-8');
+	header('Cache-Control: no-cache');
 	
 	my_query("
-		INSERT INTO `check` SET
-			`id_subscriber` = '".(int)$_GET['subscriber']."',
-			`id_magazine`	= '".(int)$_GET['magazine']."',
-			`number`		= '".(int)$_GET['number']."',
-			`sent_date`		= '".(int)preg_replace('#[^0-9]+#','',$_GET['sent_date'])."',
-			`track`			= '".(int)$_GET['track']."',
+		UPDATE `check` SET
+			`id_subscriber` = ".(int)$_GET['subscriber'].",
+			`id_magazine`	= ".(int)$_GET['magazine'].",
 			
-			`status`		= '".(int)$_GET['status']."',
+			`number`		= ".(int)$_GET['number'].",
+			`sent_date`		= ".(int)preg_replace('#[^0-9]+#','',$_GET['sent_date']).",
+			`track`			= ".(int)$_GET['track'].",
+			`status`		= '1',
 			
-			`created`		= '".date("Y-m-d H:i:s")."'
+			`updated`		= '".date("Y-m-d")."'
+		WHERE
+			`id`= ".$id." && `status`=0
 	");
-	$id = mysql_insert_id();
 	
-	if( !is_dir(CHECK_DIR) ) mkdir(CHECK_DIR,0744,true);
-	if( rename(PACK_DIR.'/'.$_GET['check'], CHECK_DIR.'/'.$id.strrchr($_GET['check'],'.')) ) {
-		unlink(PACK_DIR.'/'.$_GET['check']);
-	}
-	
+	$result = array("update"=>true);
+	echo htmlspecialchars(json_encode($result), ENT_NOQUOTES);
 	exit;
 
 } else if( isset($_GET['report']) ) {
+	
+	$ot = $_GET['ot'] ? $_GET['ot'] : date('Y.m.d',strtotime("-1 month"));
+	$do = $_GET['do'] ? $_GET['do'] : date('Y.m.d');
+	
+	$_ot = preg_replace('#[^0-9]+#','',$ot);
+	$_do = preg_replace('#[^0-9]+#','',$do);
 	
 	page_header("Отчёт");
 	
 	echo "<a href='/'>&larr; Back</a><br><br>";
 	
-	$r = my_query('SELECT *, COUNT(*) `cnt_check` FROM `check` GROUP BY `created` LIMIT 100');
+	showFilterReport1($ot, $do);
+	echo '<br><br>';
+	
+	$r = my_query('SELECT *, COUNT(*) `cnt_check` FROM `check` WHERE `created`>='.(int)$_ot.' && `created`<='.(int)$_do.' GROUP BY `created` LIMIT 100');
 	
 	showReport1($r);
 	
@@ -80,7 +90,8 @@ if( $_GET['type'] == "subscriber" && isset($_GET['val']) ) {
 
 	createCheckPack();
 
-	showCheckPack();
+	$r = my_query("SELECT * FROM `check` WHERE `status`=0 ORDER BY `created` LIMIT 100");
+	showCheckPack($r);
 }
 
 if( $root && isset($_GET['recreate-db']) ) {
@@ -113,7 +124,8 @@ if( $root && isset($_GET['recreate-db']) ) {
 			`act_date`   	DATE NOT NULL,
 			`period`    	INT(2) UNSIGNED NOT NULL,
 			
-			PRIMARY KEY (`id`)
+			PRIMARY KEY (`id`),
+			KEY (`id_subscriber`)
 	) ENGINE=MyISAM DEFAULT CHARSET=utf8");
 	
 	my_query("DROP TABLE IF EXISTS `check`");
@@ -125,15 +137,20 @@ if( $root && isset($_GET['recreate-db']) ) {
 			`sent_date`		DATE NOT NULL,
 			`track`			INT UNSIGNED NOT NULL,
 			
+			`imgext`		VARCHAR(5) NOT NULL,
+			
 			`status`		INT(3) UNSIGNED NOT NULL,
 			
+			`updated`   	DATE NOT NULL,
 			`created`   	DATE NOT NULL,
 			
 			PRIMARY KEY (`id`),
 			KEY (`track`),
 			KEY (`status`),
 			KEY (`id_subscriber`),
-			KEY (`id_magazine`)
+			KEY (`id_magazine`),
+			KEY (`updated`),
+			KEY (`created`)
 	) ENGINE=MyISAM DEFAULT CHARSET=utf8");
 	
 	echo "recreate-db";
