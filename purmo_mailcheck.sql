@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: localhost
--- Время создания: Июл 27 2019 г., 20:34
+-- Время создания: Июл 28 2019 г., 11:01
 -- Версия сервера: 5.6.39-83.1
 -- Версия PHP: 5.6.40
 
@@ -33,23 +33,33 @@ CREATE TABLE IF NOT EXISTS `check` (
   `number` int(10) UNSIGNED NOT NULL,
   `sent_date` date NOT NULL,
   `track` int(10) UNSIGNED NOT NULL,
+  `imgext` varchar(5) NOT NULL,
   `status` int(3) UNSIGNED NOT NULL,
+  `updated` date NOT NULL,
   `created` date NOT NULL,
   PRIMARY KEY (`id`),
   KEY `track` (`track`),
   KEY `status` (`status`),
   KEY `id_subscriber` (`id_subscriber`),
-  KEY `id_magazine` (`id_magazine`)
-) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+  KEY `id_magazine` (`id_magazine`),
+  KEY `updated` (`updated`),
+  KEY `created` (`created`)
+) ENGINE=MyISAM AUTO_INCREMENT=10 DEFAULT CHARSET=utf8;
 
 --
 -- Дамп данных таблицы `check`
 --
 
-INSERT INTO `check` (`id`, `id_subscriber`, `id_magazine`, `number`, `sent_date`, `track`, `status`, `created`) VALUES
-(3, 1, 3, 213, '2019-07-27', 321, 0, '2019-07-27'),
-(4, 4, 8, 213, '2019-07-26', 32, 0, '2019-07-27'),
-(5, 3, 7, 33, '2019-07-27', 44, 0, '2019-07-27');
+INSERT INTO `check` (`id`, `id_subscriber`, `id_magazine`, `number`, `sent_date`, `track`, `imgext`, `status`, `updated`, `created`) VALUES
+(1, 1, 7, 123, '2019-07-27', 333, '.jpg', 1, '2019-07-28', '2019-07-27'),
+(2, 1, 4, 32, '2019-07-28', 123, '.jpg', 1, '2019-07-27', '2019-07-27'),
+(3, 1, 1, 32, '2019-07-28', 123, '.jpg', 1, '2019-07-28', '2019-07-28'),
+(4, 1, 3, 23, '2019-07-28', 213, '.jpg', 1, '2019-07-28', '2019-07-28'),
+(5, 1, 1, 312, '2019-07-28', 3, '.jpg', 1, '2019-07-28', '2019-07-28'),
+(6, 0, 0, 0, '0000-00-00', 0, '.jpg', 0, '2019-07-28', '2019-07-28'),
+(7, 0, 0, 0, '0000-00-00', 0, '.jpg', 0, '2019-07-28', '2019-07-28'),
+(8, 0, 0, 0, '0000-00-00', 0, '.jpg', 0, '2019-07-28', '2019-07-28'),
+(9, 0, 0, 0, '0000-00-00', 0, '.jpg', 0, '2019-07-28', '2019-07-28');
 
 -- --------------------------------------------------------
 
