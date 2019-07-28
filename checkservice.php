@@ -44,6 +44,7 @@ function createCheckPack() {
  * Вывод чеков для связывания их с базой подписчиков и журнала + доп. поля
  *
  * @r mysql resource
+ * @return void
 */
 function showCheckPack($r) {
 	if( $r && mysql_num_rows($r) ) {
@@ -74,10 +75,11 @@ function showCheckPack($r) {
 }
 
 /**
- * Вывод чеков для связывания их с базой подписчиков и журнала + доп. поля
+ * Фильтр для отчёта 1
  *
  * @ot string дата начала
  * @do string дата окончания
+ * @return void
 */
 function showFilterReport1($ot='',$do='') {
 	echo '<form method="get">'.
@@ -93,9 +95,10 @@ function showFilterReport1($ot='',$do='') {
 }
 
 /**
- * Вывод отчёта
+ * Вывод отчёта 1
  *
  * @r mysql resource
+ * @return void
 */
 function showReport1($r) {
 	if( $r && mysql_num_rows($r) > 0 ) {

@@ -96,7 +96,7 @@ jQuery(document).ready(function($){
 			if( $(this).data('id') ) $(this).val( $(this).data('id') );
 		});
 		
-		$.post('/?' + $(this).serialize(),{"update-check":1},function(resp){
+		$.post('?' + $(this).serialize(),{"update-check":1},function(resp){
 			block.addClass('added');
 			block.animate({opacity:0,width:0,padding:0,margin:0},800,function(){ $(this).remove(); });
 		});
